@@ -51,7 +51,11 @@ in
   # Prevent compatiblity symlinks for deleted files overwriting the actual files
   # in older packages.
   # https://discourse.nixos.org/t/linking-issue-with-libpthread-from-glibc-2-17/34601
-  postInstall = ''
+  postInstall = let
+   pi0 = (old.postInstall or (drv.postInstall or ""));
+   lines = lib.splitString "\n" pi0;
+   filtered = lib.concatStringsSep "\n" (lib.filter (l: !(lib.hasInfix "localedata/install-locale-files" l)) lines);
+  in ''
     ln() {
       local dst="''${@: -1}"
       if [[ "$dst" == *.so && -f "$dst" ]]; then
@@ -60,7 +64,7 @@ in
       command ln "$@"
     }
 
-    ${drv.postInstall}
+    ${filtered}
 
     unset -f ln
   '';
