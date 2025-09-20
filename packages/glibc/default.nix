@@ -3,10 +3,12 @@
 , glibc
 , glibcLocales
 , glibcLocalesUtf8
+, gnumake42
 }:
 
 let
   channels = import ./channels.nix { inherit system; };
+  pinnedMake = gnumake42;
 
   glibc-nixpkgs_2_17 = channels.pkgsGlibc_2_17.glibc;
   glibc-nixpkgs_2_24 = channels.pkgsGlibc_2_24.glibc;
@@ -16,6 +18,11 @@ let
     version = "2.17";
     old = glibc-nixpkgs_2_17;
     new = glibc;
+    nativeBuildInputs = (glibc.nativeBuildInputs or []) ++ [ pinnedMake ];
+    preConfigure = (glibc.preConfigure or "") + ''
+      export PATH=${pinnedMake}/bin:"$PATH"
+      export MAKE=${pinnedMake}/bin/make
+    '';
     patches = [
       ./fix-symver.patch
       ./fix-configure.patch
