@@ -14,9 +14,23 @@ let
     "new"
     "patches"
     "backportPatches"
+    "NIX_CFLAGS_COMPILE"
   ];
 in
-new.overrideAttrs (drv: ({
+new.overrideAttrs (drv:
+  let
+    oldEnv = drv.env or {};
+    # склеим возможные предыдущие значения из env и с верхнего уровня
+    prev = lib.concatStringsSep " " (lib.filter (s: s != "") [
+      (oldEnv.NIX_CFLAGS_COMPILE or "")
+      (drv.NIX_CFLAGS_COMPILE or "")
+    ]);
+    merged = lib.concatStringsSep " " (lib.filter (s: s != "") [
+      prev
+      "-Wno-error=implicit-int"
+    ]);
+in
+({
   inherit (old) name src configureFlags postPatch;
 
   patches =
@@ -29,6 +43,10 @@ new.overrideAttrs (drv: ({
     oldPatches ++ newPatches ++ patches;
 
   preBuild = old.preBuild or "";
+
+  env = oldEnv // {
+     NIX_CFLAGS_COMPILE = merged;
+  };
 
   # Prevent compatiblity symlinks for deleted files overwriting the actual files
   # in older packages.
