@@ -1,8 +1,10 @@
 { lib
 , system
+, stdenv
 , glibc
 , glibcLocales
 , glibcLocalesUtf8
+, libiconv
 , gnumake42
 }:
 
@@ -53,6 +55,18 @@ let
 in
 {
   glibc_2_17 = import ./common.nix args_2_17;
+  libiconv_2_17 = stdenv.mkDerivation {
+    pname = "libiconv";
+    version = "2.17";
+
+    # Нам не нужны исходники, мы берем результат сборки glibc_2_17
+    dontUnpack = true;
+
+    # Фаза установки - просто копирование
+    installPhase = ''
+      mkdir -p $out/lib
+    '';
+  };
   glibcLocales_2_17 = import ./common.nix (mkArgsLocale_2_17 glibcLocales);
   glibcLocalesUtf8_2_17 =
     import ./common.nix (mkArgsLocale_2_17 glibcLocalesUtf8);
