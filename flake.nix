@@ -62,12 +62,13 @@
       overlay = final: prev:
         let
           glibcPackages = prev.callPackage ./packages/glibc {
-            inherit (prev) glibc glibcLocales glibcLocalesUtf8;
+            inherit (prev) glibc glibcLocales glibcLocalesUtf8 libiconv;
           };
         in
         {
           glibcLocales = glibcPackages."glibcLocales${glibcSuffix}";
           glibcLocalesUtf8 = glibcPackages."glibcLocalesUtf8${glibcSuffix}";
+          libiconv = glibcPackages."libiconv${glibcSuffix}";
           util-linux = prev.util-linux.overrideAttrs (old: {
             nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ (with prev; [
               autoreconfHook
